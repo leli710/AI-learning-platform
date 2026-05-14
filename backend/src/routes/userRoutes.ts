@@ -1,9 +1,9 @@
 import express from 'express';
-import { registerUser } from '../controllers/userController.ts';
+import { loginOrRegister, getUserHistory } from '../controllers/userController';
 
 const router = express.Router();
 
-// נתיב הרשמה: POST http://localhost:5000/api/users/register
-router.post('/register', registerUser);
+router.post('/login', loginOrRegister);
+router.get('/:userId/history', getUserHistory);
 
 export default router;

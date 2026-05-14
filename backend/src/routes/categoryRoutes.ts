@@ -1,9 +1,13 @@
 import express from 'express';
 import { createCategory, getCategories } from '../controllers/categoryController';
+import {createSubCategory, getSubCategoriesByParent, getAiLearningPlan } from '../controllers/subCategoryController';
+
 const router = express.Router();
-// נתיב לקבלת כל הקטגוריות: GET http://localhost:5000/api/categories
+
 router.get('/', getCategories);
-// נתיב ליצירת קטגוריה חדשה: POST http://localhost:5000/api/categories
 router.post('/', createCategory);
+router.post('/sub', createSubCategory);
+router.get('/sub/:categoryId', getSubCategoriesByParent);
+router.post('/sub/:id/learn', getAiLearningPlan);
 
 export default router;
