@@ -9,6 +9,7 @@ export interface IUser extends Document {
   history: any[]; 
 }
 
+
 const UserSchema: Schema = new Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true, unique: true },
