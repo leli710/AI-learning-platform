@@ -5,5 +5,4 @@ const router = express.Router();
 
 router.post('/login', loginOrRegister);
 router.get('/:userId/history', getUserHistory);
-
 export default router;
