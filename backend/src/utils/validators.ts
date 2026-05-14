@@ -1,4 +1,4 @@
-
+//בדיקת ת"ז ע"פ האלגוריתם הישראלי הרשמי
 export const isValidIsraeliID = (id: string | number): boolean => {
     let idString = String(id).trim();
 
