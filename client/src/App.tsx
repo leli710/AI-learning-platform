@@ -1,11 +1,18 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <h1 className="text-4xl font-bold text-blue-600">
-        AI Learning Platform
-      </h1>
-    </div>
-  )
+    <Router>
+      <Routes>
+        {/* דף הכניסה */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* אם המשתמש נכנס לדף לא קיים, נשלח אותו ללוגין */}
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
