@@ -5,14 +5,14 @@ export interface ICategory extends Document {
 }
 
 const CategorySchema: Schema = new Schema({
-    name: { 
-        type: String, 
-        required: [true, 'Category name is required'], 
-        unique: true, 
-        trim: true 
+    name: {
+        type: String,
+        required: [true, 'Category name is required'],
+        unique: true,
+        trim: true
     }
-}, { 
-    timestamps: true // הוספת חותמת זמן ליצירת הקטגוריה
+}, {
+    timestamps: true
 });
 
 export default mongoose.model<ICategory>('Category', CategorySchema);

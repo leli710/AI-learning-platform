@@ -6,18 +6,18 @@ export interface ISubcategory extends Document {
 }
 
 const SubcategorySchema: Schema = new Schema({
-    name: { 
-        type: String, 
-        required: [true, 'Sub-category name is required'], 
-        trim: true 
+    name: {
+        type: String,
+        required: [true, 'Sub-category name is required'],
+        trim: true
     },
-    categoryId: { 
-        type: Schema.Types.ObjectId, 
-        ref: 'Category', 
-        required: [true, 'Category id is required'] 
+    categoryId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Category',
+        required: [true, 'Category id is required']
     }
-}, { 
-    timestamps: true // מוסיף אוטומטית שדות זמן ליצירה ועדכון
+}, {
+    timestamps: true
 });
 
-export default mongoose.model<ISubcategory>('Subcategory', SubcategorySchema);
+export default mongoose.models.Subcategory || mongoose.model('Subcategory', SubcategorySchema);
