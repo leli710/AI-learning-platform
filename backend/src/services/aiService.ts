@@ -1,35 +1,31 @@
 import OpenAI from 'openai';
-import dotenv from 'dotenv';
 
-dotenv.config();
+const apiKey = process.env.OPENAI_API_KEY;
+const openai = apiKey ? new OpenAI({ apiKey }) : null;
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
-export const generateLearningPlan = async (topic: string) => {
+export const generateAIResponse = async (prompt: string): Promise<string> => {
+    if (!openai) {
+        console.log('OpenAI API key missing, using fallback...');
+        return getFallbackResponse(prompt);
+    }
     try {
         const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini", 
-            messages: [
-                {
-                    role: "system",
-                    content: `You are an expert teacher. 
-                              Create a structured 3-step learning plan for the given topic. 
-                              Return a JSON object with exactly three keys: step1, step2, and step3.
-                              Each value should be a string containing clear learning instructions.`
-                },
-                {
-                    role: "user",
-                    content: `Create a learning plan for the following topic: ${topic}`
-                }
-            ],
-            response_format: { type: "json_object" }
+            model: 'gpt-4o',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 1000,
+            
         });
-
-      return response.choices[0].message.content;
+        return response.choices[0]?.message?.content || 'No response from AI.';
     } catch (error: any) {
-        console.error("OpenAI Service Error:", error.message);
+        console.error('OpenAI API Error:', error.message);
+        if (error.status === 403 || error.status === 429) {
+            console.log('OpenAI access denied or quota exceeded, using fallback...');
+            return getFallbackResponse(prompt);
+        }
         throw error;
     }
+};
+
+const getFallbackResponse = (prompt: string): string => {
+    return `# Lesson: ${prompt}\n\nThis is a simulated lesson.\n\nTo receive live AI responses, please ensure your OpenAI API key is active and has a valid balance (minimum $5 loaded in OpenAI Billing).`;
 };
