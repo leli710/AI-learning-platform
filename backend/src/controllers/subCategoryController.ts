@@ -2,31 +2,19 @@ import { Request, Response } from 'express';
 import Category from '../models/Category';
 import SubCategory from '../models/SubCategory';
 import Prompt from '../models/Prompt';
-import { generateLearningPlan } from '../services/aiService'; 
+import { generateAIResponse } from '../services/aiService';
 
 export const createSubCategory = async (req: Request, res: Response) => {
     try {
         const { name, description, categoryId } = req.body;
-
-        if (!categoryId) {
-            return res.status(400).json({ message: 'categoryId is required' });
-        }
-
+        if (!categoryId) return res.status(400).json({ message: 'categoryId is required' });
         const parentCategory = await Category.findById(categoryId);
-        if (!parentCategory) {
-            return res.status(404).json({ message: 'Parent category not found' });
-        }
-
-        const newSubCategory = new SubCategory({
-            name,
-            description,
-            categoryId: categoryId 
-        });
-
+        if (!parentCategory) return res.status(404).json({ message: 'Parent category not found' });
+        const newSubCategory = new SubCategory({ name, description, categoryId });
         await newSubCategory.save();
         res.status(201).json(newSubCategory);
     } catch (error) {
-        console.error("Error in createSubCategory:", error);
+        console.error('Error in createSubCategory:', error);
         res.status(500).json({ message: 'Error creating sub-category' });
     }
 };
@@ -34,9 +22,20 @@ export const createSubCategory = async (req: Request, res: Response) => {
 export const getSubCategoriesByParent = async (req: Request, res: Response) => {
     try {
         const { categoryId } = req.params;
-        const subCategories = await SubCategory.find({ categoryId: categoryId });
+        const subCategories = await SubCategory.find({ categoryId });
         res.status(200).json(subCategories);
     } catch (error) {
+        console.error('Error fetching sub-categories by parent:', error);
+        res.status(500).json({ message: 'Error fetching sub-categories' });
+    }
+};
+
+export const getAllSubCategories = async (req: Request, res: Response) => {
+    try {
+        const subCategories = await SubCategory.find();
+        res.status(200).json(subCategories);
+    } catch (error) {
+        console.error('Error fetching all sub-categories:', error);
         res.status(500).json({ message: 'Error fetching sub-categories' });
     }
 };
@@ -44,47 +43,35 @@ export const getSubCategoriesByParent = async (req: Request, res: Response) => {
 export const getAiLearningPlan = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { userId } = req.body; // קבלת ה-ID של המשתמש לצורך שמירת היסטוריה
-
+        const { userId } = req.body;
         const subCategory = await SubCategory.findById(id);
-        if (!subCategory) {
-            return res.status(404).json({ message: 'Sub-category not found' });
-        }
-
-        let aiResponse: any;
-
+        if (!subCategory) return res.status(404).json({ message: 'Sub-category not found' });
+        let aiResponse: string;
         try {
-            const plan = await generateLearningPlan(subCategory.name);
-            aiResponse = typeof plan === 'string' ? JSON.parse(plan) : plan;
+            aiResponse = await generateAIResponse(
+                `Create a detailed professional learning plan and comprehensive lesson about: ${subCategory.name}. Divide it into clear steps.`
+            );
         } catch (aiError) {
-            console.error("AI Error (Fallback to Mock):", aiError);
-
-            // מנגנון גיבוי המאפשר המשכיות של האפליקציה גם במקרה של חסימות רשת או שגיאות API
-            aiResponse = {
-                step1: `Welcome to ${subCategory.name}: Understanding the core basics and terminology.`,
-                step2: `Deep Dive: Practical tools and common methodologies in ${subCategory.name}.`,
-                step3: `Advanced Mastery: Final project and real-world application.`
-            };
+            console.error('AI Error (Fallback to Mock):', aiError);
+            aiResponse =
+                `# Lesson: ${subCategory.name}\n\n` +
+                `## Step 1: Introduction\nWelcome to ${subCategory.name}. In this part, we will understand the core basics and essential terminology.\n\n` +
+                `## Step 2: Deep Dive\nPractical tools, real-world examples, and common methodologies in ${subCategory.name}.\n\n` +
+                `## Step 3: Advanced Mastery\nFinal conclusions, optimization techniques, and real-world application.`;
         }
-
-        // שמירת הלימוד בטבלת ה-Prompts כדי לאפשר למשתמש לצפות בהיסטוריית הלמידה שלו בעתיד
         if (userId) {
             const newPrompt = new Prompt({
                 userId,
                 categoryId: subCategory.categoryId,
                 subCategoryId: subCategory._id,
                 prompt: `Learn about ${subCategory.name}`,
-                response: JSON.stringify(aiResponse)
+                response: aiResponse
             });
             await newPrompt.save();
         }
-
-        res.status(200).json({
-            topic: subCategory.name,
-            plan: aiResponse
-        });
+        res.status(200).json({ topic: subCategory.name, plan: aiResponse });
     } catch (error) {
-        console.error("SERVER ERROR:", error);
+        console.error('SERVER ERROR:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
